@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Glove Pricing Calculator</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #0f0c29, #1a1a2e, #16213e);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    padding: 24px 16px 48px;
+    color: #e2e8f0;
+  }
+
+  /* Header */
+  .header { text-align: center; margin-bottom: 28px; }
+  .badge {
+    display: inline-block;
+    background: linear-gradient(90deg, #f97316, #fb923c);
+    border-radius: 12px;
+    padding: 4px 16px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    color: #fff;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+  }
+  h1 {
+    font-size: 26px;
+    font-weight: 800;
+    background: linear-gradient(90deg, #fff, #94a3b8);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 6px;
+  }
+  .subtitle { color: #64748b; font-size: 13px; }
+
+  /* Cards */
+  .card {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 16px;
+    padding: 20px 18px;
+    margin-bottom: 16px;
+    backdrop-filter: blur(10px);
+    max-width: 520px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  label { font-size: 13px; color: #94a3b8; display: block; margin-bottom: 8px; }
+
+  .price-row { display: flex; align-items: center; gap: 10px; }
+  .currency { font-size: 22px; color: #f97316; font-weight: 700; }
+
+  input[type="number"] {
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(249,115,22,0.4);
+    border-radius: 10px;
+    padding: 12px 14px;
+    font-size: 18px;
+    font-weight: 700;
+    color: #fff;
+    outline: none;
+    width: 100%;
+  }
+  input[type="number"]::placeholder { color: #475569; font-weight: 400; font-size: 14px; }
+  input[type="number"]:focus { border-color: #f97316; }
+
+  .sliders { display: flex; gap: 16px; margin-top: 16px; }
+  .slider-group { flex: 1; }
+  .slider-label { font-size: 12px; color: #94a3b8; margin-bottom: 6px; display: block; }
+  input[type="range"] { width: 100%; accent-color: #f97316; cursor: pointer; }
+  input[type="range"].green { accent-color: #22c55e; }
+
+  .shipping-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 12px;
+  }
+  .shipping-item {
+    background: rgba(255,255,255,0.04);
+    border-radius: 8px;
+    padding: 8px 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+  }
+  .shipping-item span { font-size: 12px; color: #cbd5e1; }
+  .shipping-item input {
+    width: 60px;
+    border: 1px solid rgba(255,255,255,0.15) !important;
+    border-radius: 6px !important;
+    padding: 4px 8px !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    text-align: right;
+  }
+
+  /* Result cards */
+  .result-card {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 16px;
+    padding: 16px 18px;
+    margin-bottom: 14px;
+    max-width: 520px;
+    margin-left: auto;
+    margin-right: auto;
+    opacity: 0;
+    transform: translateY(12px);
+    transition: opacity 0.35s ease, transform 0.35s ease;
+  }
+  .result-card.show { opacity: 1; transform: translateY(0); }
+
+  .spec-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+  .spec-title {
+    font-size: 20px;
+    font-weight: 800;
+    background: linear-gradient(90deg, #f97316, #fb923c);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .spec-sub { font-size: 12px; color: #64748b; }
+
+  .breakdown {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    margin-bottom: 14px;
+  }
+  .breakdown-item {
+    background: rgba(255,255,255,0.04);
+    border-radius: 8px;
+    padding: 6px 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .breakdown-item .bl { font-size: 12px; color: #94a3b8; }
+  .breakdown-item .bv { font-size: 12px; color: #e2e8f0; font-weight: 600; }
+
+  .thresholds { border-top: 1px solid rgba(255,255,255,0.08); padding-top: 12px; display: flex; flex-direction: column; gap: 8px; }
+  .total-row { display: flex; justify-content: space-between; align-items: center; }
+  .total-row span:first-child { font-size: 13px; color: #94a3b8; }
+  .total-row span:last-child { font-size: 15px; font-weight: 700; color: #e2e8f0; }
+
+  .threshold-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-radius: 8px;
+    padding: 8px 12px;
+  }
+  .red-row { background: rgba(239,68,68,0.1); }
+  .red-row span:first-child { font-size: 13px; color: #fca5a5; }
+  .red-row span:last-child { font-size: 15px; font-weight: 800; color: #fca5a5; }
+  .green-row { background: rgba(34,197,94,0.12); }
+  .green-row span:first-child { font-size: 13px; color: #86efac; }
+  .green-row span:last-child { font-size: 15px; font-weight: 800; color: #86efac; }
+
+  /* Offer checker */
+  .checker { margin-top: 12px; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 12px; }
+  .checker-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .checker-label { font-size: 12px; color: #64748b; white-space: nowrap; }
+  .checker-input-wrap { display: flex; align-items: center; gap: 6px; flex: 1; min-width: 100px; }
+  .checker-input-wrap span { color: #f97316; font-size: 14px; }
+  .checker-input {
+    flex: 1;
+    background: rgba(255,255,255,0.07) !important;
+    border: 1px solid rgba(255,255,255,0.12) !important;
+    border-radius: 8px !important;
+    padding: 7px 10px !important;
+    font-size: 14px !important;
+    font-weight: 600 !important;
+  }
+  .verdict {
+    font-size: 12px;
+    font-weight: 700;
+    white-space: nowrap;
+    min-width: 90px;
+    text-align: right;
+    display: none;
+  }
+
+  /* Empty state */
+  #empty {
+    text-align: center;
+    padding: 48px 0;
+    color: #475569;
+    max-width: 520px;
+    margin: 0 auto;
+  }
+  #empty .icon { font-size: 48px; margin-bottom: 12px; }
+  #empty p { font-size: 14px; }
+
+  .footer {
+    text-align: center;
+    font-size: 11px;
+    color: #475569;
+    margin-top: 28px;
+    line-height: 1.6;
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="badge">Temu Fully-Managed</div>
+  <h1>Glove Pricing Calculator</h1>
+  <p class="subtitle">Enter the unit cost → get total cost and the lowest price to accept</p>
+</div>
+
+<!-- Input Card -->
+<div class="card">
+  <label>Unit cost per pair (CNY)</label>
+  <div class="price-row">
+    <span class="currency">¥</span>
+    <input type="number" id="purchasePrice" placeholder="e.g. 2.6" step="0.01" min="0" oninput="calculate()">
+  </div>
+
+  <div class="sliders">
+    <div class="slider-group">
+      <span class="slider-label">Loss rate <strong id="lossLabel">7</strong>%</span>
+      <input type="range" min="0" max="20" value="7" id="lossRate" oninput="updateLabel('lossRate','lossLabel');calculate()">
+    </div>
+    <div class="slider-group">
+      <span class="slider-label">Target margin <strong id="marginLabel">15</strong>%</span>
+      <input type="range" class="green" min="5" max="40" value="15" id="targetMargin" oninput="updateLabel('targetMargin','marginLabel');calculate()">
+    </div>
+  </div>
+
+  <label style="margin-top:16px;">Shipping to warehouse (CNY per pack)</label>
+  <div class="shipping-grid">
+    <div class="shipping-item"><span>1 pair</span><input type="number" id="s1" value="0.9" step="0.1" oninput="calculate()"></div>
+    <div class="shipping-item"><span>6 pairs</span><input type="number" id="s6" value="2.5" step="0.1" oninput="calculate()"></div>
+    <div class="shipping-item"><span>12 pairs</span><input type="number" id="s12" value="3.5" step="0.1" oninput="calculate()"></div>
+    <div class="shipping-item"><span>24 pairs</span><input type="number" id="s24" value="3.5" step="0.1" oninput="calculate()"></div>
+  </div>
+</div>
+
+<!-- Empty state -->
+<div id="empty">
+  <div class="icon">🧤</div>
+  <p>Enter a unit cost above to see results</p>
+</div>
+
+<!-- Result Cards -->
+<div id="results" style="display:none;">
+  <div class="result-card" id="card-1">
+    <div class="spec-header">
+      <span class="spec-title">1 pair</span>
+      <span class="spec-sub" id="sub-1"></span>
+    </div>
+    <div class="breakdown">
+      <div class="breakdown-item"><span class="bl">Product</span><span class="bv" id="goods-1"></span></div>
+      <div class="breakdown-item"><span class="bl">Packaging</span><span class="bv" id="bag-1">¥0.02</span></div>
+      <div class="breakdown-item"><span class="bl">Shipping</span><span class="bv" id="ship-1"></span></div>
+      <div class="breakdown-item"><span class="bl" id="loss-label-1">Loss (7%)</span><span class="bv" id="loss-1"></span></div>
+    </div>
+    <div class="thresholds">
+      <div class="total-row"><span>Total cost</span><span id="total-1"></span></div>
+      <div class="threshold-row red-row"><span>🔴 Break-even price</span><span id="breakeven-1"></span></div>
+      <div class="threshold-row green-row"><span id="suggested-label-1">🟢 Suggested price (15% margin)</span><span id="suggested-1"></span></div>
+    </div>
+    <div class="checker">
+      <div class="checker-row">
+        <span class="checker-label">Temu's offer →</span>
+        <div class="checker-input-wrap"><span>¥</span><input type="number" class="checker-input" placeholder="Enter offer" step="0.01" oninput="checkVerdict(this,'1')"></div>
+        <span class="verdict" id="verdict-1"></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="result-card" id="card-6">
+    <div class="spec-header">
+      <span class="spec-title">6 pairs</span>
+      <span class="spec-sub" id="sub-6"></span>
+    </div>
+    <div class="breakdown">
+      <div class="breakdown-item"><span class="bl">Product</span><span class="bv" id="goods-6"></span></div>
+      <div class="breakdown-item"><span class="bl">Packaging</span><span class="bv" id="bag-6">¥0.08</span></div>
+      <div class="breakdown-item"><span class="bl">Shipping</span><span class="bv" id="ship-6"></span></div>
+      <div class="breakdown-item"><span class="bl" id="loss-label-6">Loss (7%)</span><span class="bv" id="loss-6"></span></div>
+    </div>
+    <div class="thresholds">
+      <div class="total-row"><span>Total cost</span><span id="total-6"></span></div>
+      <div class="threshold-row red-row"><span>🔴 Break-even price</span><span id="breakeven-6"></span></div>
+      <div class="threshold-row green-row"><span id="suggested-label-6">🟢 Suggested price (15% margin)</span><span id="suggested-6"></span></div>
+    </div>
+    <div class="checker">
+      <div class="checker-row">
+        <span class="checker-label">Temu's offer →</span>
+        <div class="checker-input-wrap"><span>¥</span><input type="number" class="checker-input" placeholder="Enter offer" step="0.01" oninput="checkVerdict(this,'6')"></div>
+        <span class="verdict" id="verdict-6"></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="result-card" id="card-12">
+    <div class="spec-header">
+      <span class="spec-title">12 pairs</span>
+      <span class="spec-sub" id="sub-12"></span>
+    </div>
+    <div class="breakdown">
+      <div class="breakdown-item"><span class="bl">Product</span><span class="bv" id="goods-12"></span></div>
+      <div class="breakdown-item"><span class="bl">Packaging</span><span class="bv" id="bag-12">¥0.08</span></div>
+      <div class="breakdown-item"><span class="bl">Shipping</span><span class="bv" id="ship-12"></span></div>
+      <div class="breakdown-item"><span class="bl" id="loss-label-12">Loss (7%)</span><span class="bv" id="loss-12"></span></div>
+    </div>
+    <div class="thresholds">
+      <div class="total-row"><span>Total cost</span><span id="total-12"></span></div>
+      <div class="threshold-row red-row"><span>🔴 Break-even price</span><span id="breakeven-12"></span></div>
+      <div class="threshold-row green-row"><span id="suggested-label-12">🟢 Suggested price (15% margin)</span><span id="suggested-12"></span></div>
+    </div>
+    <div class="checker">
+      <div class="checker-row">
+        <span class="checker-label">Temu's offer →</span>
+        <div class="checker-input-wrap"><span>¥</span><input type="number" class="checker-input" placeholder="Enter offer" step="0.01" oninput="checkVerdict(this,'12')"></div>
+        <span class="verdict" id="verdict-12"></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="result-card" id="card-24">
+    <div class="spec-header">
+      <span class="spec-title">24 pairs</span>
+      <span class="spec-sub" id="sub-24"></span>
+    </div>
+    <div class="breakdown">
+      <div class="breakdown-item"><span class="bl">Product</span><span class="bv" id="goods-24"></span></div>
+      <div class="breakdown-item"><span class="bl">Packaging</span><span class="bv" id="bag-24">¥0.20</span></div>
+      <div class="breakdown-item"><span class="bl">Shipping</span><span class="bv" id="ship-24"></span></div>
+      <div class="breakdown-item"><span class="bl" id="loss-label-24">Loss (7%)</span><span class="bv" id="loss-24"></span></div>
+    </div>
+    <div class="thresholds">
+      <div class="total-row"><span>Total cost</span><span id="total-24"></span></div>
+      <div class="threshold-row red-row"><span>🔴 Break-even price</span><span id="breakeven-24"></span></div>
+      <div class="threshold-row green-row"><span id="suggested-label-24">🟢 Suggested price (15% margin)</span><span id="suggested-24"></span></div>
+    </div>
+    <div class="checker">
+      <div class="checker-row">
+        <span class="checker-label">Temu's offer →</span>
+        <div class="checker-input-wrap"><span>¥</span><input type="number" class="checker-input" placeholder="Enter offer" step="0.01" oninput="checkVerdict(this,'24')"></div>
+        <span class="verdict" id="verdict-24"></span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<p class="footer">Loss covers returns and damaged goods · Prices in CNY (¥) for a China-based supplier<br>For reference only</p>
+
+<script>
+  const SPECS = [
+    { key: '1',  qty: 1,  bag: 0.02 },
+    { key: '6',  qty: 6,  bag: 0.08 },
+    { key: '12', qty: 12, bag: 0.08 },
+    { key: '24', qty: 24, bag: 0.20 },
+  ];
+
+  function fmt(n) { return '¥' + n.toFixed(2); }
+
+  function updateLabel(sliderId, labelId) {
+    document.getElementById(labelId).textContent = document.getElementById(sliderId).value;
+  }
+
+  function calculate() {
+    const price = parseFloat(document.getElementById('purchasePrice').value);
+    const lossRate = parseFloat(document.getElementById('lossRate').value) / 100;
+    const margin = parseFloat(document.getElementById('targetMargin').value);
+
+    if (!price || price <= 0) {
+      document.getElementById('empty').style.display = 'block';
+      document.getElementById('results').style.display = 'none';
+      return;
+    }
+
+    document.getElementById('empty').style.display = 'none';
+    document.getElementById('results').style.display = 'block';
+
+    SPECS.forEach(spec => {
+      const shipping = parseFloat(document.getElementById('s' + spec.key).value) || 0;
+      const goodsCost = price * spec.qty;
+      const lossCost = goodsCost * lossRate;
+      const totalCost = goodsCost + spec.bag + shipping + lossCost;
+      const suggested = totalCost / (1 - margin / 100);
+
+      document.getElementById('sub-' + spec.key).textContent = `¥${price.toFixed(2)} × ${spec.qty}`;
+      document.getElementById('goods-' + spec.key).textContent = fmt(goodsCost);
+      document.getElementById('ship-' + spec.key).textContent = fmt(shipping);
+      document.getElementById('loss-label-' + spec.key).textContent = `Loss (${Math.round(lossRate*100)}%)`;
+      document.getElementById('loss-' + spec.key).textContent = fmt(lossCost);
+      document.getElementById('total-' + spec.key).textContent = fmt(totalCost);
+      document.getElementById('breakeven-' + spec.key).textContent = '≥ ' + fmt(totalCost);
+      document.getElementById('suggested-label-' + spec.key).textContent = `🟢 Suggested price (${margin}% margin)`;
+      document.getElementById('suggested-' + spec.key).textContent = '≥ ' + fmt(suggested);
+
+      // Re-check verdict if an offer is already entered
+      const checkerInput = document.querySelector(`#card-${spec.key} .checker-input`);
+      if (checkerInput && checkerInput.value) checkVerdict(checkerInput, spec.key);
+
+      // Animate
+      const card = document.getElementById('card-' + spec.key);
+      card.classList.remove('show');
+      setTimeout(() => card.classList.add('show'), 50 + SPECS.indexOf(spec) * 70);
+    });
+  }
+
+  function checkVerdict(input, key) {
+    const val = parseFloat(input.value);
+    const verdictEl = document.getElementById('verdict-' + key);
+    const breakevenText = document.getElementById('breakeven-' + key).textContent;
+    const suggestedText = document.getElementById('suggested-' + key).textContent;
+    const breakeven = parseFloat(breakevenText.replace('≥ ¥', ''));
+    const suggested = parseFloat(suggestedText.replace('≥ ¥', ''));
+
+    if (!val || val <= 0) { verdictEl.style.display = 'none'; return; }
+
+    verdictEl.style.display = 'block';
+    if (val >= suggested) {
+      verdictEl.textContent = '🟢 Accept';
+      verdictEl.style.color = '#22c55e';
+    } else if (val >= breakeven) {
+      verdictEl.textContent = '🟡 Thin margin';
+      verdictEl.style.color = '#eab308';
+    } else {
+      verdictEl.textContent = '🔴 Losing money';
+      verdictEl.style.color = '#ef4444';
+    }
+  }
+</script>
+</body>
+</html>
